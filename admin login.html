@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Meadi Aqua Tech | Secure Admin Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        // ஒருமுறை லாகின் செய்திருந்தால் மீண்டும் லாகின் பக்கம் வராமல் அட்மின் பேனலுக்கு அனுப்பும்
+        if (sessionStorage.getItem("isAdminAuthenticated") === "true") {
+            window.location.replace("admin.html");
+        }
+    </script>
+
+    <style>
+        :root { 
+            --bg: #f4f7fe; --primary: #0077b6; --white: #ffffff; 
+            --border: #e2e8f0; --text-main: #1b2559; --text-sub: #a3aed0;
+            --danger: #ee5d50; 
+        }
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: var(--bg); 
+            margin: 0; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: var(--text-main); 
+        }
+
+        .overlay { 
+            position: fixed; 
+            inset: 0; 
+            background: #1e293b; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 10000; 
+        }
+
+        .card { 
+            background: white; 
+            padding: 35px 30px; 
+            border-radius: 24px; 
+            width: 90%; 
+            max-width: 360px; 
+            text-align: center; 
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
+        }
+
+        h2 { margin-bottom: 25px; font-size: 24px; font-weight: 700; color: var(--text-main); }
+        
+        input { 
+            width: 100%; 
+            padding: 14px; 
+            margin-bottom: 15px; 
+            border: 1.5px solid var(--border); 
+            border-radius: 12px; 
+            box-sizing: border-box; 
+            outline: none; 
+            font-family: inherit;
+            transition: 0.3s; 
+            font-size: 15px;
+        }
+
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(0, 119, 182, 0.1); }
+
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            border-radius: 12px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 10px; 
+            transition: 0.3s; 
+            font-size: 16px;
+        }
+
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        button:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+        .btn-loader { 
+            width: 18px; 
+            height: 18px; 
+            border: 2px solid rgba(255,255,255,0.3); 
+            border-top: 2px solid white; 
+            border-radius: 50%; 
+            animation: spin 0.8s linear infinite; 
+            display: none; 
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .btn-change { 
+            background: transparent; 
+            color: var(--text-sub);
+            margin-top: 20px; 
+            font-size: 13px; 
+            font-weight: 600; 
+            text-decoration: underline;
+        }
+        
+        .btn-change:hover { color: var(--primary); background: transparent; }
+
+        .cancel-btn { background: #f1f5f9; color: #475569; margin-top: 15px; font-size: 14px; }
+        .cancel-btn:hover { background: #e2e8f0; }
+
+        hr { margin: 25px 0; border: 0; border-top: 1px solid #f1f5f9; }
+
+        #settingsPage { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="loginOverlay" class="overlay">
+        <div class="card">
+            <h2>🔒 Admin Login</h2>
+            <input type="text" id="loginUser" placeholder="Username" autocomplete="username">
+            <input type="password" id="loginPass" placeholder="Password" autocomplete="current-password">
+            <button id="loginBtn">
+                <span class="btn-loader" id="loginLdr"></span>
+                <span id="loginTxt">Login</span>
+                <button id="biometricBtn" style="background: #05cd99; margin-top: 10px;">
+    <span class="icon">☝️</span> Login with Fingerprint
+</button>
+
+                
+                
+            </button>
+            <button class="btn-change" id="btnShowSettings">Forgot or Change Credentials?</button>
+        </div>
+    </div>
+
+    <div id="settingsPage" class="overlay">
+        <div class="card">
+            <h2>⚙️ Security Reset</h2>
+            <p style="font-size:13px; color:var(--text-sub); margin-bottom: 20px;">Enter Admin Security Code to Reset</p>
+            <input type="password" id="securityPhone" placeholder="Security Code">
+            <hr>
+            <input type="text" id="newUser" placeholder="New Username">
+            <input type="password" id="newPass" placeholder="New Password">
+            <button id="updateBtn">
+                <span class="btn-loader" id="updateLdr"></span>
+                <span id="updateTxt">Update Credentials</span>
+            </button>
+            <button class="btn-change cancel-btn" id="btnHideSettings">Back to Login</button>
+        </div>
+    </div>
+
+    <script type="module" src="admin login script.js"></script>
+</body>
+</html>
+

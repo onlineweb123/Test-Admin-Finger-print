@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Meadi Aqua Tech | Admin Panel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- PWA Open -->
+
+    <link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Meadi Admin">
+<link rel="apple-touch-icon" href="icon-192x192.png">
+<meta name="theme-color" content="#0077b6">
+
+<script>
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker Registered'))
+                .catch(err => console.log('Service Worker Failed', err));
+        });
+    }
+
+    // Auth Check
+    if (sessionStorage.getItem("isAdminAuthenticated") !== "true") {
+        window.location.replace("admin login.html");
+    }
+</script>
+
+
+    <!-- PWA End  -->
+
+
+
+    <script>
+        if (sessionStorage.getItem("isAdminAuthenticated") !== "true") {
+            window.location.replace("admin login.html");
+        }
+    </script>
+
+    <style>
+        :root { 
+            --bg: #f4f7fe; --primary: #0077b6; --white: #ffffff; 
+            --border: #e2e8f0; --text-main: #1b2559; --text-sub: #a3aed0;
+            --danger: #ee5d50; --success: #05cd99; --warning: #ffb547;
+            --glass: rgba(255, 255, 255, 0.8);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: var(--bg); margin: 0; 
+            color: var(--text-main); 
+            padding-bottom: 100px; /* Space for bottom nav */
+        }
+
+        /* HEADER & SIDEBAR STYLES */
+        header { 
+            height: 70px; display: flex; align-items: center; justify-content: center; 
+            position: fixed; top: 0; left: 0; right: 0; 
+            background: var(--glass); backdrop-filter: blur(12px);
+            z-index: 100; border-bottom: 1px solid var(--border);
+        }
+
+        .menu-btn { 
+            position: absolute; left: 20px; font-size: 24px; 
+            background: #f1f5f9; border: none; color: var(--text-main); 
+            cursor: pointer; width: 40px; height: 40px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .sidebar { 
+            width: 280px; background: var(--white); position: fixed; top: 0; bottom: 0; left: -300px; 
+            padding-top: 80px; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 110; 
+            box-shadow: 20px 0 50px rgba(0,0,0,0.05);
+        }
+        .sidebar.open { left: 0; }
+        .sidebar a { 
+            display: flex; align-items: center; padding: 16px 24px; text-decoration: none; 
+            color: var(--text-main); font-weight: 500; font-size: 15px; transition: 0.2s;
+        }
+        .sidebar a:hover { background: #f8fafc; color: var(--primary); padding-left: 30px; }
+
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); display: none; z-index: 105; backdrop-filter: blur(4px); }
+        .overlay.show { display: block; }
+
+        /* MAIN CONTENT */
+        .main-content { padding: 90px 15px 20px 15px; max-width: 600px; margin: 0 auto; }
+
+        .loader-mini { 
+            width: 18px; height: 18px; border: 3px solid var(--border); 
+            border-top: 3px solid var(--primary); border-radius: 50%; 
+            animation: spin 1s linear infinite; display: inline-block;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+
+        .admin-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }
+        .ctrl-box { background: var(--white); padding: 18px 15px; border-radius: 16px; text-align: center; border: 1px solid var(--border); text-decoration: none; color: inherit; font-weight: 700; transition: 0.3s; font-size: 13px; }
+        .ctrl-box:active { transform: scale(0.95); background: #f8fafc; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; }
+        .stat-card { background: var(--white); padding: 15px 10px; border-radius: 18px; text-align: center; border: 1px solid var(--border); }
+        .stat-card span { color: var(--text-sub); font-size: 10px; display: block; font-weight: 600; text-transform: uppercase; }
+
+        /* TABLE & LIST */
+        .expiry-table-container { background: var(--white); border-radius: 20px; padding: 15px; border: 1px solid #fed7d7; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(238, 93, 80, 0.1); }
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        th { text-align: left; font-size: 11px; color: var(--text-sub); padding: 10px; border-bottom: 1px solid var(--border); }
+        td { padding: 12px 10px; font-size: 13px; border-bottom: 1px solid #f8fafc; }
+
+        input[type="date"] { padding: 5px; border: 1px solid var(--border); border-radius: 5px; font-family: inherit; font-size: 12px; }
+        .user-card { background: var(--white); padding: 15px; border-radius: 18px; border: 1px solid var(--border); display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; }
+
+        .save-btn { background: var(--success); color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: bold; }
+        .logout-btn { background: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 12px; }
+
+        /* BOTTOM NAVIGATION */
+        .bottom {
+            height: 75px; position: fixed; bottom: 0; left: 0; right: 0; 
+            display: flex; justify-content: space-around; align-items: center; 
+            background: var(--glass); backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border); z-index: 100; padding-bottom: env(safe-area-inset-bottom);
+        }
+        .bottom button {
+            background: none; border: none; font-size: 11px; font-weight: 600;
+            display: flex; flex-direction: column; align-items: center; color: var(--text-sub);
+            cursor: pointer;
+        }
+        .bottom button.active { color: var(--primary); }
+        .bottom .icon { font-size: 22px; margin-bottom: 4px; }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <button class="menu-btn" id="menuBtn">☰</button>
+    <div style="font-size: 18px; font-weight: 700; color: var(--primary);">Meadi Admin</div>
+</header>
+
+<div id="sidebar" class="sidebar">
+  <div style="padding: 20px; text-align: center; border-bottom: 1px solid var(--border);">
+      <b style="color: var(--primary);">ADMIN MENU</b>
+  </div>
+  <a href="login members.html">👥 Members</a>
+  <a href="control profile.html">⚙️ Profile Settings</a>
+  <a href="customer detail.html">📒 Customer List</a>
+  <a href="online bill.html">🧾 Online Bill</a>
+  <a href="service list.html">👨‍🔧 Service List</a>
+<a href="https://onlineweb123.github.io/Meadi-Aqua-Tech-App/index.html">📱 User App</a>
+
+  <a href="#" onclick="logoutAdmin()" style="color: var(--danger);">🚪 Logout</a>
+</div>
+
+<div id="overlay" class="overlay"></div>
+
+<div class="main-content">
+    <div class="header-area">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <h2 style="margin:0; font-size: 20px;">Dashboard</h2>
+            <div id="miniLoader" class="loader-mini"></div>
+        </div>
+        <button onclick="logoutAdmin()" class="logout-btn">Logout</button>
+    </div>
+
+    <div class="admin-controls">
+        <a href="login members.html" class="ctrl-box">👥 Members</a>
+        <a href="customer detail.html" class="ctrl-box">📒 Customers</a>
+        <a href="online bill.html" class="ctrl-box">🧾 Online Bill</a>
+        <a href="service list.html" class="ctrl-box">👨‍🔧 Services</a>
+         <a href="data manager.html" class="ctrl-box">🗂️ Data Manager</a>
+         <a href="control profile.html" class="ctrl-box">⚙️ control profile</a>
+          <a href="offer creat.html" class="ctrl-box">📢 offer creat</a>
+            <a href="send notification.html" class="ctrl-box">🔔 Send Notificati </a>
+             <a href="new future.html" class="ctrl-box">✴️ New Future </a>
+             <a href="notes send.html" class="ctrl-box">📝 Notes Send </a>
+            
+
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card"><span>Total Users</span><h2 id="totalUsers" style="margin:5px 0 0 0; font-size: 18px;">0</h2></div>
+        <div class="stat-card"><span>Filter Due</span><h2 id="filterDueCount" style="color:var(--warning); margin:5px 0 0 0; font-size: 18px;">0</h2></div>
+        <div class="stat-card"><span>AMC Due</span><h2 id="amcDueCount" style="color:var(--danger); margin:5px 0 0 0; font-size: 18px;">0</h2></div>
+    </div>
+
+    <div id="urgentSection" class="expiry-table-container" style="display:none;">
+        <p style="color: var(--danger); font-weight: 800; margin-top: 0; font-size: 13px; display:flex; align-items:center; gap:5px;">🚨 Action Required</p>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>CUSTOMER</th>
+                        <th>DUE STATUS</th>
+                        <th>FILTER</th>
+                        <th>AMC</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+                <tbody id="expiryTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div style="font-weight:700; margin-bottom:15px; color:var(--text-sub); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">👥 Members Quick View</div>
+    <div id="userList"></div>
+</div>
+
+<div class="bottom">
+    <button onclick="location.href='index.html'" class="active"><span class="icon">🏠</span>Home</button>
+    <button onclick="location.href='customer detail.html'"><span class="icon">📒</span>Customer</button>
+    <button onclick="location.href='service list.html'"><span class="icon">👨‍🔧</span>Service</button>
+    <button onclick="location.href='control profile.html'"><span class="icon">⚙️</span>Settings</button>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAqyyGJt_t0ztknMudFVLmo6relkEa284g",
+        authDomain: "meadi-aqua-tech.firebaseapp.com",
+        databaseURL: "https://meadi-aqua-tech-default-rtdb.firebaseio.com",
+        projectId: "meadi-aqua-tech"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const loader = document.getElementById("miniLoader");
+
+    // Sidebar Toggle
+    const toggleMenu = () => {
+        document.getElementById("sidebar").classList.toggle("open");
+        document.getElementById("overlay").classList.toggle("show");
+    };
+    document.getElementById("menuBtn").onclick = toggleMenu;
+    document.getElementById("overlay").onclick = toggleMenu;
+
+    window.onload = loadAdminData;
+
+    async function loadAdminData() {
+        loader.style.display = "inline-block";
+        try {
+            const snapshot = await get(ref(db, 'users'));
+            if (snapshot.exists()) renderData(snapshot.val());
+            loader.style.display = "none";
+        } catch (e) { 
+            console.error(e); 
+            loader.style.display = "none";
+        }
+    }
+
+    function renderData(data) {
+        const users = Object.entries(data);
+        let fCount = 0, aCount = 0, tableHTML = "", cardsHTML = "";
+        const today = new Date();
+
+        users.forEach(([userId, user]) => {
+            let fExp = false, aExp = false;
+            if(user.lastFilterDate) {
+                let d = new Date(user.lastFilterDate); d.setMonth(d.getMonth() + 3);
+                if(today > d) { fExp = true; fCount++; }
+            }
+            if(user.lastAMCDate) {
+                let d = new Date(user.lastAMCDate); d.setFullYear(d.getFullYear() + 1);
+                if(today > d) { aExp = true; aCount++; }
+            }
+
+            if(fExp || aExp) {
+                tableHTML += `<tr>
+                    <td><b>${user.name || 'Unknown'}</b></td>
+                    <td style="color:var(--danger); font-size:10px; font-weight:bold;">
+                        ${fExp ? '● FILTER' : ''} ${aExp ? '● AMC' : ''}
+                    </td>
+                    <td><input type="date" id="ef-${userId}" value="${user.lastFilterDate || ''}"></td>
+                    <td><input type="date" id="ea-${userId}" value="${user.lastAMCDate || ''}"></td>
+                    <td><button class="save-btn" data-id="${userId}">Save</button></td>
+                </tr>`;
+            }
+
+            cardsHTML += `<div class="user-card">
+                <div><b>${user.name || 'User'}</b><br><small style="color:var(--text-sub)">📞 ${user.phone || 'N/A'}</small></div>
+                <div style="text-align:right; font-size:10px; color:var(--text-sub);">F: ${user.lastFilterDate || '--'}<br>A: ${user.lastAMCDate || '--'}</div>
+            </div>`;
+        });
+
+        document.getElementById("totalUsers").innerText = users.length;
+        document.getElementById("filterDueCount").innerText = fCount;
+        document.getElementById("amcDueCount").innerText = aCount;
+        document.getElementById("userList").innerHTML = cardsHTML;
+
+        const urgentSection = document.getElementById("urgentSection");
+        if(tableHTML) {
+            urgentSection.style.display = "block";
+            document.getElementById("expiryTableBody").innerHTML = tableHTML;
+        } else {
+            urgentSection.style.display = "none";
+        }
+    }
+
+    document.addEventListener('click', async (e) => {
+        if(e.target.classList.contains('save-btn')) {
+            const id = e.target.dataset.id;
+            const newFilter = document.getElementById(`ef-${id}`).value;
+            const newAMC = document.getElementById(`ea-${id}`).value;
+            loader.style.display = "inline-block";
+            e.target.innerText = "...";
+            try {
+                await update(ref(db, `users/${id}`), { lastFilterDate: newFilter, lastAMCDate: newAMC });
+                await loadAdminData(); 
+                alert("Updated Successfully!");
+            } catch (err) { 
+                alert("Failed!"); 
+                loader.style.display = "none";
+            }
+        }
+    });
+
+    window.logoutAdmin = () => {
+        sessionStorage.removeItem("isAdminAuthenticated");
+        window.location.replace("admin login.html");
+    };
+</script>
+</body>
+</html>
