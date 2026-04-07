@@ -2,37 +2,90 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Meadi Admin | Biometric Setup</title>
+    <title>Meadi Admin | Biometric Management</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #0077b6; --bg: #f4f7fe; --white: #ffffff; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .card { background: var(--white); padding: 30px; border-radius: 24px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        .icon-box { font-size: 50px; margin-bottom: 20px; }
-        h2 { color: #1b2559; margin-bottom: 10px; }
+        :root { 
+            --primary: #0077b6; --danger: #ee5d50; --bg: #f4f7fe; 
+            --white: #ffffff; --text: #1b2559; --border: #e2e8f0;
+        }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: var(--bg); margin: 0; 
+            display: flex; justify-content: center; align-items: center; 
+            height: 100vh; color: var(--text); 
+        }
+        
+        .card { 
+            background: var(--white); padding: 35px; border-radius: 24px; 
+            width: 90%; max-width: 400px; text-align: center; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
+        }
+        .icon-header { font-size: 50px; margin-bottom: 15px; }
+        h2 { margin-bottom: 10px; font-size: 22px; font-weight: 700; }
         p { color: #a3aed0; font-size: 14px; margin-bottom: 30px; line-height: 1.5; }
-        .setup-btn { background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 12px; font-weight: 700; cursor: pointer; width: 100%; transition: 0.3s; }
-        .setup-btn:active { transform: scale(0.98); }
-        .back-link { display: block; margin-top: 20px; color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 600; }
+
+        .btn-group { display: flex; flex-direction: column; gap: 15px; }
+        
+        .btn { 
+            border: none; padding: 18px; border-radius: 16px; font-weight: 700; 
+            cursor: pointer; width: 100%; transition: 0.3s; font-size: 15px;
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+            box-sizing: border-box;
+        }
+
+        /* Add Button Style */
+        .btn-add { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(0, 119, 182, 0.2); }
+        .btn-add:hover { background: #005f92; }
+
+        /* Remove Button Style */
+        .btn-remove { background: #fff1f2; color: var(--danger); border: 1.5px solid #fecaca; }
+        .btn-remove:hover { background: #ffe4e6; }
+
+        .btn:active { transform: scale(0.96); }
+
+        .back-link { 
+            display: block; margin-top: 25px; color: #718096; 
+            text-decoration: none; font-size: 14px; font-weight: 600; 
+        }
+        
+        #status { 
+            margin-top: 20px; padding: 12px; border-radius: 12px; 
+            font-size: 13px; font-weight: 600; display: none; 
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="icon-box">🛡️</div>
-    <h2>Biometric Setup</h2>
-    <p>இந்த போனில் கைரேகை மூலம் லாகின் செய்ய விரும்பினால், கீழே உள்ள பட்டனை அழுத்தி உங்கள் கைரேகையை உறுதிப்படுத்தவும்.</p>
+    <div class="icon-header">🛡️</div>
+    <h2>Biometric Control</h2>
+    <p>உங்கள் சாதனத்தின் கைரேகை பாதுகாப்பை இங்கிருந்து கட்டுப்படுத்தலாம்.</p>
     
-    <button id="registerBio" class="setup-btn">Register Fingerprint</button>
+    <div class="btn-group">
+        <button id="addBioBtn" class="btn btn-add">
+            <span style="font-size: 18px;">➕</span> Add Fingerprint
+        </button>
+
+        <button id="removeBioBtn" class="btn btn-remove">
+            <span style="font-size: 18px;">🗑️</span> Remove Fingerprint
+        </button>
+    </div>
+
+    <div id="status"></div>
     
     <a href="admin.html" class="back-link">← Back to Dashboard</a>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+    // Firebase Config
     const firebaseConfig = {
         apiKey: "AIzaSyAqyyGJt_t0ztknMudFVLmo6relkEa284g",
         authDomain: "meadi-aqua-tech.firebaseapp.com",
@@ -42,21 +95,28 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const statusDiv = document.getElementById("status");
 
-    document.getElementById("registerBio").onclick = async () => {
-        if (!window.PublicKeyCredential) {
-            return alert("இந்த போனில் கைரேகை (Biometric) வசதி இல்லை அல்லது பிரவுசர் சப்போர்ட் செய்யவில்லை.");
-        }
+    function showStatus(msg, isError = false) {
+        statusDiv.innerText = msg;
+        statusDiv.style.display = "block";
+        statusDiv.style.background = isError ? "#fff1f2" : "#f0fdf4";
+        statusDiv.style.color = isError ? "#e11d48" : "#16a34a";
+        setTimeout(() => { statusDiv.style.display = "none"; }, 4000);
+    }
+
+    // --- ADD LOGIC ---
+    document.getElementById("addBioBtn").onclick = async () => {
+        if (!window.PublicKeyCredential) return alert("இந்த சாதனத்தில் பயோமெட்ரிக் வசதி இல்லை.");
 
         try {
             const challenge = new Uint8Array(32);
             window.crypto.getRandomValues(challenge);
             
-            // கைரேகை பதிவுக்கான செட்டிங்ஸ்
-            const createCredentialOptions = {
+            const options = {
                 publicKey: {
                     challenge: challenge,
-                    rp: { name: "Meadi Aqua Tech Admin", id: window.location.hostname },
+                    rp: { name: "Meadi Aqua Tech", id: window.location.hostname },
                     user: {
                         id: Uint8Array.from("Admin-Mathavan", c => c.charCodeAt(0)),
                         name: "admin@meadiaqua.com",
@@ -68,26 +128,33 @@
                 }
             };
 
-            const credential = await navigator.credentials.create(createCredentialOptions);
-            
-            // சிக்னேச்சரை டெக்ஸ்டாக மாற்றுதல்
+            const credential = await navigator.credentials.create(options);
             const rawId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
             
-            // 1. Firebase-ல் சேமித்தல்
             await update(ref(db, 'admin/biometrics'), {
                 registeredId: rawId,
                 setupDate: new Date().toISOString()
             });
 
-            // 2. இந்த போன் மெமரியில் சேமித்தல் (அடையாளம் காண)
             localStorage.setItem("bioEnabledId", rawId);
-
-            alert("கைரேகை வெற்றிகரமாக பதிவு செய்யப்பட்டது! அடுத்த முறை நீங்கள் பாஸ்வேர்ட் இல்லாமல் லாகின் செய்யலாம்.");
-            window.location.href = "admin.html";
+            showStatus("✅ கைரேகை வெற்றிகரமாக சேர்க்கப்பட்டது!");
 
         } catch (err) {
             console.error(err);
-            alert("பதிவு செய்வதில் தோல்வி: " + err.message);
+            showStatus("❌ பதிவு செய்வதில் தோல்வி!", true);
+        }
+    };
+
+    // --- REMOVE LOGIC ---
+    document.getElementById("removeBioBtn").onclick = async () => {
+        if (!confirm("நிச்சயமாக இந்த சாதனத்தில் உள்ள கைரேகை பதிவை நீக்க வேண்டுமா?")) return;
+
+        try {
+            await remove(ref(db, 'admin/biometrics'));
+            localStorage.removeItem("bioEnabledId");
+            showStatus("🗑️ கைரேகை பதிவு நீக்கப்பட்டது!");
+        } catch (err) {
+            showStatus("❌ நீக்குவதில் சிக்கல்!", true);
         }
     };
 </script>
