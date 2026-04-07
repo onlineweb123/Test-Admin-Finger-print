@@ -5,7 +5,7 @@
     <title>Meadi Aqua Tech | Secure Admin Login</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <script>
         // ஒருமுறை லாகின் செய்திருந்தால் மீண்டும் லாகின் பக்கம் வராமல் அட்மின் பேனலுக்கு அனுப்பும்
         if (sessionStorage.getItem("isAdminAuthenticated") === "true") {
@@ -19,7 +19,7 @@
             --border: #e2e8f0; --text-main: #1b2559; --text-sub: #a3aed0;
             --danger: #ee5d50; 
         }
-        
+
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
             background: var(--bg); 
@@ -52,7 +52,7 @@
         }
 
         h2 { margin-bottom: 25px; font-size: 24px; font-weight: 700; color: var(--text-main); }
-        
+
         input { 
             width: 100%; 
             padding: 14px; 
@@ -108,7 +108,7 @@
             font-weight: 600; 
             text-decoration: underline;
         }
-        
+
         .btn-change:hover { color: var(--primary); background: transparent; }
 
         .cancel-btn { background: #f1f5f9; color: #475569; margin-top: 15px; font-size: 14px; }
@@ -129,13 +129,13 @@
             <button id="loginBtn">
                 <span class="btn-loader" id="loginLdr"></span>
                 <span id="loginTxt">Login</span>
-                <button id="biometricBtn" style="background: #05cd99; margin-top: 10px;">
-    <span class="icon">☝️</span> Login with Fingerprint
+            </button>     
+            
+                  <button id="bioLoginBtn" style="margin-top: 15px; background: #334155; display: none;">
+    🖐️ Login with Fingerprint
 </button>
 
-                
-                
-            </button>
+            
             <button class="btn-change" id="btnShowSettings">Forgot or Change Credentials?</button>
         </div>
     </div>
@@ -159,4 +159,3 @@
     <script type="module" src="admin login script.js"></script>
 </body>
 </html>
-
