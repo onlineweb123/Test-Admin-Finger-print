@@ -42,15 +42,15 @@ document.getElementById("loginBtn").onclick = async () => {
         const snapshot = await get(ref(db, 'admin'));
         if (snapshot.exists()) {
             const adminData = snapshot.val();
-            
+
             // டேட்டாபேஸில் உள்ள தரவுகளுடன் ஒப்பிடுதல்
             if (u === adminData.user && p === adminData.pass) {
-                
+
                 // ✅ முக்கியமான மாற்றம்: 
                 // லாகின் செய்த அட்மின் பெயரை 'aquaUser' என சேமிக்கிறோம். 
                 // இதுதான் மற்ற பக்கங்களில் 'Mathavan' என்ற நோடைத் திறக்க உதவும்.
                 localStorage.setItem("aquaUser", adminData.user); 
-                
+
                 sessionStorage.setItem("isAdminAuthenticated", "true"); 
 
                 window.location.href = "admin.html"; 
@@ -100,37 +100,39 @@ document.getElementById("btnHideSettings").onclick = () => {
     document.getElementById("settingsPage").style.display = "none";
     document.getElementById("loginOverlay").style.display = "flex";
 };
-// Fingerprint Login Function
-document.getElementById("biometricBtn").onclick = async () => {
-    // பிரவுசர் பிங்கர் பிரிண்ட் ஆதரிக்கிறதா எனச் சரிபார்க்க
-    if (window.PublicKeyCredential) {
-        try {
-            // இது ஒரு எளிய 'Mock' லஜிக். 
-            // பிரவுசரின் பயோமெட்ரிக் விண்டோவை இது திறக்கும்.
-            const credential = await navigator.credentials.get({
-                publicKey: {
-                    challenge: new Uint8Array([1, 2, 3, 4]), // ரேண்டம் ஐடி
-                    allowCredentials: [], 
-                    userVerification: "required"
-                }
-            });
+// --- Fingerprint Login logic ---
+const bioLoginBtn = document.getElementById("bioLoginBtn");
 
-            if (credential) {
-                // பிங்கர் பிரிண்ட் சரியாக இருந்தால், நீங்கள் ஏற்கனவே வைத்துள்ள 
-                // Admin கிரிடன்ஷியலை வைத்து லாக்-இன் செய்யும்.
-                const snapshot = await get(ref(db, 'admin'));
-                if (snapshot.exists()) {
-                    const adminData = snapshot.val();
-                    localStorage.setItem("aquaUser", adminData.user);
-                    sessionStorage.setItem("isAdminAuthenticated", "true");
-                    window.location.href = "admin.html";
-                }
+// இந்த போனில் ஏற்கனவே பதிவு செய்யப்பட்டுள்ளதா என செக் செய்தல்
+if (window.PublicKeyCredential && localStorage.getItem("bioEnabledId")) {
+    bioLoginBtn.style.display = "flex";
+}
+
+bioLoginBtn.onclick = async () => {
+    try {
+        const storedId = localStorage.getItem("bioEnabledId");
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+
+        const assertion = await navigator.credentials.get({
+            publicKey: {
+                challenge: challenge,
+                allowCredentials: [{
+                    id: Uint8Array.from(atob(storedId), c => c.charCodeAt(0)),
+                    type: 'public-key'
+                }],
+                userVerification: "required",
+                timeout: 60000
             }
-        } catch (err) {
-            console.error("Biometric failed", err);
-            alert("Fingerprint recognition failed or cancelled.");
+        });
+
+        if (assertion) {
+            // கைரேகை சரியாக இருந்தால் லாகின் செய்ததாக உறுதிப்படுத்துதல்
+            sessionStorage.setItem("isAdminAuthenticated", "true");
+            window.location.href = "admin.html";
         }
-    } else {
-        alert("Your browser does not support Biometric authentication.");
+    } catch (err) {
+        console.error("Biometric Login Failed", err);
+        alert("கைரேகை பொருந்தவில்லை அல்லது ரத்து செய்யப்பட்டது.");
     }
 };
